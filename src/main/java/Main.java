@@ -1,10 +1,11 @@
+import me.tongfei.progressbar.ProgressBar;
+
 import java.awt.*;
 import java.util.Scanner;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
-import javax.swing.*;
 
 
 class Pair {
@@ -61,36 +62,39 @@ public class Main {
             int width = image.getWidth();
             int height = image.getHeight();
 
-            for (int i = 0; i < width; i++) {
-                for (int j = 0; j < height; j++) {
-                    int color = image.getRGB(i, j);
+            try (ProgressBar pb = new ProgressBar("Converting Picture... ", (long) width * height)) {
+                for (int i = 0; i < width; i++) {
+                    for (int j = 0; j < height; j++) {
+                        int color = image.getRGB(i, j);
 
-                    // Extract RGBA properly
-                    int alpha = (color >> 24) & 0xFF;
-                    int red   = (color >> 16) & 0xFF;
-                    int green = (color >> 8) & 0xFF;
-                    int blue  = color & 0xFF;
+                        // Extract RGBA properly
+                        int alpha = (color >> 24) & 0xFF;
+                        int red   = (color >> 16) & 0xFF;
+                        int green = (color >> 8) & 0xFF;
+                        int blue  = color & 0xFF;
 
-                    // Find the closest palette color
-                    Pair closest = null;
-                    double minDistance = Double.MAX_VALUE;
+                        // Find the closest palette color
+                        Pair closest = null;
+                        double minDistance = Double.MAX_VALUE;
 
-                    for (String hex : AvaliableHexCodes) {
-                        double distance = ColorCompersion.PercentageCalculator(
-                                new int[]{red, green, blue}, hex
-                        );
-                        if (distance < minDistance) {
-                            minDistance = distance;
-                            closest = new Pair(distance, hex);
+                        for (String hex : AvaliableHexCodes) {
+                            double distance = ColorCompersion.PercentageCalculator(
+                                    new int[]{red, green, blue}, hex
+                            );
+                            if (distance < minDistance) {
+                                minDistance = distance;
+                                closest = new Pair(distance, hex);
+                            }
                         }
+
+                        // Convert hex to RGB
+                        int[] newRGB = ColorCompersion.HexToRgb(closest.hexcode);
+
+                        // Create new Color with alpha preserved
+                        Color newColor = new Color(newRGB[0], newRGB[1], newRGB[2], alpha);
+                        image.setRGB(i, j, newColor.getRGB());
+                        pb.step();
                     }
-
-                    // Convert hex to RGB
-                    int[] newRGB = ColorCompersion.HexToRgb(closest.hexcode);
-
-                    // Create new Color with alpha preserved
-                    Color newColor = new Color(newRGB[0], newRGB[1], newRGB[2], alpha);
-                    image.setRGB(i, j, newColor.getRGB());
                 }
             }
 
